@@ -3,6 +3,8 @@ import { CatalogModel } from './components/Models/CatalogModel';
 import { BasketModel } from './components/Models/BasketModel';
 import { CustomerModel } from './components/Models/CustomerModel';
 import { apiProducts } from './utils/data';
+import { WebLarekAPI } from './components/Models/WebLarekAPI';
+import { API_URL } from './utils/constants';
 
 const catalog = new CatalogModel();
 console.log('CatalogModel - initial state:', catalog.getItems());
@@ -46,14 +48,11 @@ console.log('CustomerModel - order data:', customer.getOrderData());
 customer.clear();
 console.log('CustomerModel - after clear done');
 
-import { WebLarekAPI } from './components/Models/WebLarekAPI';
-
-const api = new WebLarekAPI();
+const api = new WebLarekAPI(API_URL);
 
 api.getProducts()
   .then((response) => {
     console.log('Полный ответ сервера:', response);
-    
     catalog.setItems(response.items);
     console.log('Каталог обновлён. Загружено товаров:', catalog.getItems().length);
   })

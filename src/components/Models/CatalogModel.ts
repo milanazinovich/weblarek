@@ -4,8 +4,6 @@ export class CatalogModel {
   private _items: IProduct[] = [];
   private _selectedProduct: IProduct | null = null;
 
-  constructor() {}
-
   setItems(items: IProduct[]): void {
     this._items = items;
   }

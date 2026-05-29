@@ -3,8 +3,6 @@ import { IProduct } from '../../types';
 export class BasketModel {
   private _items: IProduct[] = [];
 
-  constructor() {}
-
   getItems(): IProduct[] {
     return this._items;
   }
