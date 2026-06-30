@@ -1,26 +1,62 @@
+import { IEvents } from './Events';
+
 /**
  * Базовый компонент
  */
 export abstract class Component<T> {
-    protected constructor(protected readonly container: HTMLElement) {
-        // Учитывайте что код в конструкторе исполняется ДО всех объявлений в дочернем классе
-    }
+	protected constructor(
+		protected readonly container: HTMLElement,
+		protected readonly events?: IEvents
+	) {}
 
-    // Инструментарий для работы с DOM в дочерних компонентах
+	protected setImage(element: HTMLImageElement, src: string, alt?: string) {
+		if (element) {
+			element.src = src;
+			if (alt) element.alt = alt;
+		}
+	}
 
-    // Установить изображение с альтернативным текстом
-    protected setImage(element: HTMLImageElement, src: string, alt?: string) {
-        if (element) {
-            element.src = src;
-            if (alt) {
-                element.alt = alt;
-            }
+	protected setText(element: HTMLElement, value: unknown) {
+		if (element) {
+            element.textContent = String(value);
         }
-    }
+	}
 
-    // Вернуть корневой DOM-элемент
-    render(data?: Partial<T>): HTMLElement {
-        Object.assign(this as object, data ?? {});
-        return this.container;
-    }
+	// Найти элемент внутри контейнера
+	protected ensureElement<ElementType extends HTMLElement>(selector: string): ElementType {
+		const element = this.container.querySelector(selector) as ElementType;
+		if (!element) throw new Error(`Элемент ${selector} не найден`);
+		return element;
+	}
+
+	protected setDisabled(element: HTMLElement, state: boolean) {
+		if (element) element.toggleAttribute('disabled', state);
+	}
+
+	protected setHidden(element: HTMLElement, state: boolean) {
+		if (element) element.classList.toggle('hidden', state);
+	}
+
+	protected toggleClass(element: HTMLElement, className: string, force?: boolean) {
+		if (element) element.classList.toggle(className, force);
+	}
+
+	protected subscribe<ElementType extends HTMLElement>(
+		element: ElementType,
+		event: string,
+		handler: (e: Event) => void
+	) {
+		element.addEventListener(event, handler);
+	}
+
+	protected emitEvent(event: string, data?: unknown) {
+	if (this.events) this.events.emit(event, data as object | undefined);
+}
+
+render(data?: Partial<T>): HTMLElement {
+	return this.container;
+}
+	public getContainer(): HTMLElement {
+		return this.container;
+	}
 }

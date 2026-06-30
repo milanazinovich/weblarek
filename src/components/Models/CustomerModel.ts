@@ -1,40 +1,62 @@
+import { IEvents } from '../base/Events';
 import { IBuyer, TPayment, ValidationErrors } from '../../types';
 
 export class CustomerModel {
-  private payment: TPayment | null = null;
-  private email: string = '';
-  private phone: string = '';
-  private address: string = '';
+	private payment: TPayment | null = null;
+	private email: string = '';
+	private phone: string = '';
+	private address: string = '';
+	private events: IEvents;
 
-  setPayment(payment: TPayment): void { this.payment = payment; }
-  setEmail(email: string): void { this.email = email; }
-  setPhone(phone: string): void { this.phone = phone; }
-  setAddress(address: string): void { this.address = address; }
+	constructor(events: IEvents) {
+		this.events = events;
+	}
 
-  getOrderData(): IBuyer {
-    return {
-      payment: this.payment,
-      email: this.email,
-      phone: this.phone,
-      address: this.address
-    };
-  }
+	setPayment(payment: TPayment): void {
+		this.payment = payment;
+		this.events.emit('customer:change');
+	}
 
-  clear(): void {
-    this.payment = null;
-    this.email = '';
-    this.phone = '';
-    this.address = '';
-  }
+	setEmail(email: string): void {
+		this.email = email;
+		this.events.emit('customer:change');
+	}
 
-  validate(): ValidationErrors {
-    const errors: ValidationErrors = {};
-    
-    if (!this.payment) errors.payment = 'Не выбран вид оплаты';
-    if (!this.email) errors.email = 'Укажите емэйл';
-    if (!this.phone) errors.phone = 'Укажите телефон';
-    if (!this.address) errors.address = 'Укажите адрес';
-    
-    return errors;
-  }
+	setPhone(phone: string): void {
+		this.phone = phone;
+		this.events.emit('customer:change');
+	}
+
+	setAddress(address: string): void {
+		this.address = address;
+		this.events.emit('customer:change');
+	}
+
+	getOrderData(): IBuyer {
+		return {
+			payment: this.payment,
+			email: this.email,
+			phone: this.phone,
+			address: this.address
+		};
+	}
+
+	clear(): void {
+		this.payment = null;
+		this.email = '';
+		this.phone = '';
+		this.address = '';
+		this.events.emit('customer:clear');
+	}
+
+	validate(): ValidationErrors {
+		const errors: ValidationErrors = {};
+		
+		if (!this.payment) errors.payment = 'Не выбран вид оплаты';
+		if (!this.email) errors.email = 'Укажите емэйл';
+		if (!this.phone) errors.phone = 'Укажите телефон';
+		if (!this.address) errors.address = 'Укажите адрес';
+		
+		return errors;
+	}
 }
