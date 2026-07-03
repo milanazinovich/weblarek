@@ -13,21 +13,10 @@ export abstract class Form extends Component<IBuyer> {
     constructor(container: HTMLElement, events: IEvents, formName: string) {
         super(container);
         this.events = events;
-        this.formName = formName;
-        
-        console.log(`🔍 Form.${formName}: конструктор`);
-        
-        // ✅ ИСПРАВЛЕНО: ищем кнопку с type="submit"
+        this.formName = formName; 
         this.submit = ensureElement<HTMLButtonElement>(container, 'button[type="submit"]');
-        console.log(`  ✅ Кнопка submit найдена:`, this.submit);
-        console.log(`  📌 className: ${this.submit.className}`);
-        console.log(`  📌 disabled: ${this.submit.disabled}`);
-        
         this.errors = ensureElement<HTMLElement>(container, '.form__errors');
-        console.log(`  ✅ Элемент ошибок найден`);
-        
         this.cacheInputs();
-        console.log(`  ✅ Инпуты закэшированы: ${this.inputs.size}`);
         
         subscribe(container, 'input', (e: Event) => {
             const target = e.target as HTMLInputElement;
@@ -85,22 +74,12 @@ export abstract class Form extends Component<IBuyer> {
     }
 
     set errorText(value: string) {
-        console.log(`📝 Form.${this.formName}.errorText = "${value}"`);
         setText(this.errors, value);
     }
 
     set isValid(value: boolean) {
-        console.log(`🎯 Form.${this.formName}.isValid = ${value}`);
-        console.log(`  📌 submit элемент:`, this.submit);
-        console.log(`  📌 submit.className: ${this.submit.className}`);
-        console.log(`  📌 submit.disabled ДО: ${this.submit.disabled}`);
-        
         setDisabled(this.submit, !value);
-        
-        console.log(`  📌 submit.disabled ПОСЛЕ: ${this.submit.disabled}`);
-        
         const isDisabled = this.submit.hasAttribute('disabled');
-        console.log(`  📌 hasAttribute('disabled'): ${isDisabled}`);
     }
 
     render(data: Partial<IBuyer>): HTMLElement {

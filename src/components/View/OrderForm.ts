@@ -9,17 +9,10 @@ export class OrderForm extends Form {
     constructor(container: HTMLElement, events: IEvents) {
         super(container, events, 'order');
         
-        console.log('🔍 OrderForm.constructor: начало');
-        
-        // Находим кнопки оплаты
         this.paymentButtons = container.querySelectorAll('button[name="card"], button[name="cash"]');
-        console.log('🔍 Найдено кнопок оплаты:', this.paymentButtons.length);
         
-        // Обработчики кнопок оплаты
         this.paymentButtons.forEach((button) => {
             subscribe(button, 'click', () => {
-                console.log('🔘 Клик по кнопке оплаты:', button.name);
-                
                 this.paymentButtons.forEach(btn => {
                     btn.classList.remove('button_alt-active');
                 });
@@ -33,14 +26,10 @@ export class OrderForm extends Form {
             });
         });
 
-        // ✅ Подписка на submit формы (уже обрабатывается в Form)
         subscribe(container, 'submit', (e: Event) => {
-            console.log('🔘 SUBMIT формы');
             e.preventDefault();
             emitEvent(this.events, 'order:submit');
         });
-        
-        console.log('✅ OrderForm.constructor: конец');
     }
 
     render(data: Partial<IBuyer>): HTMLElement {
@@ -76,7 +65,6 @@ export class OrderForm extends Form {
     }
 
     set isValid(value: boolean) {
-        console.log(`🎯 OrderForm.isValid = ${value}`);
         super.isValid = value;
     }
 

@@ -5,24 +5,20 @@ import { ensureElement, subscribe, emitEvent } from '../../utils/dom';
 export class Modal extends Component<any> {
     protected closeButton: HTMLElement;
     protected content: HTMLElement;
-    private events: IEvents; // ← Храним события отдельно
+    private events: IEvents;
 
     constructor(container: HTMLElement, events: IEvents) {
-        super(container); // ← Только container, как в стартере
+        super(container);
         this.events = events;
-
-        // ✅ Вызываем утилиты с передачей container первым аргументом
         this.closeButton = ensureElement(container, '.modal__close');
         this.content = ensureElement(container, '.modal__content');
 
-        // ✅ Вызываем subscribe без this.
         subscribe(this.closeButton, 'click', () => {
             this.close();
         });
 
         subscribe(this.container, 'click', (e: Event) => {
             if (e.target === this.container) {
-                // ✅ Передаём this.events первым аргументом
                 emitEvent(this.events, 'modal:close');
             }
         });
@@ -30,8 +26,6 @@ export class Modal extends Component<any> {
 
     public open(): void {
         this.container.classList.add('modal_active');
-        document.body.style.overflow = 'hidden';
-        emitEvent(this.events, 'modal:open');
     }
 
     public render(content: HTMLElement): HTMLElement {
@@ -43,8 +37,6 @@ export class Modal extends Component<any> {
 
     public close(): void {
         this.container.classList.remove('modal_active');
-        document.body.style.overflow = '';
-        emitEvent(this.events, 'modal:close');
     }
 
     public getContainer(): HTMLElement {

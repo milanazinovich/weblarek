@@ -13,23 +13,18 @@ export class CardBasket extends BaseCard {
     private _id: string = '';
 
     constructor(container: HTMLElement, events: IEvents) {
-        super(container, events); // ← BaseCard тоже принимает events!
+        super(container, events);
         
         this.deleteButton = this.container.querySelector('.basket__item-delete');
         this.indexElement = this.container.querySelector('.basket__item-index');
 
-        console.log('🔍 Кнопка удаления найдена:', this.deleteButton);
-
         if (this.deleteButton) {
             subscribe(this.deleteButton, 'click', (e) => {
                 e.stopPropagation();
-                console.log('🗑️ Клик по удалению. ID:', this._id);
                 if (this._id) {
                     emitEvent(this.events, 'basket:remove', { id: this._id });
                 }
             });
-        } else {
-            console.warn('⚠️ Кнопка удаления НЕ найдена! Проверьте селектор .basket__item-delete');
         }
     }
 

@@ -12,7 +12,6 @@ export class ContactsForm extends Form {
         });
     }
 
-    // ✅ ЯВНО ОБЪЯВЛЯЕМ СЕТТЕРЫ, которые есть в родительском классе
     set errorText(value: string) {
         super.errorText = value;
     }

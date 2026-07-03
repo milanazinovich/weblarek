@@ -20,7 +20,6 @@ export abstract class BaseCard extends Component<IProduct> {
         setText(this.titleElement, value);
     }
 
-    // ✅ Сеттер для цены
     set price(value: number | null) {
         setText(this.priceElement, value ? `${value} синапсов` : 'Бесценно');
     }

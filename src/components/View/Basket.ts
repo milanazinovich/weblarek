@@ -13,30 +13,24 @@ export class Basket extends Component<IBasketData> {
     protected list: HTMLElement;
     protected total: HTMLElement;
     protected submit: HTMLElement;
-    private events: IEvents; // ← Храним события отдельно
+    private events: IEvents;
 
     constructor(container: HTMLElement, events: IEvents) {
-        super(container); // ← Только container, как в стартере
+        super(container);
         this.events = events;
-
-        // ✅ Передаём container первым аргументом
         this.list = ensureElement(container, '.basket__list');
         this.total = ensureElement(container, '.basket__price');
         this.submit = ensureElement(container, '.basket__button');
 
-        // ✅ Вызываем subscribe без this.
         subscribe(this.submit, 'click', () => {
-            // ✅ Передаём this.events первым аргументом
             emitEvent(this.events, 'basket:submit');
         });
     }
 
     render(data: IBasketData): HTMLElement {
         this.list.innerHTML = '';
-        
         if (data.items.length === 0) {
             this.list.innerHTML = '<li class="basket__empty">Корзина пуста</li>';
-            // ✅ Вызываем setDisabled без this.
             setDisabled(this.submit, true);
         } else {
             data.items.forEach((item, index) => {
@@ -52,9 +46,7 @@ export class Basket extends Component<IBasketData> {
             setDisabled(this.submit, false);
         }
 
-        // ✅ Вызываем setText без this.
         setText(this.total, `${data.total} синапсов`);
-        
         return super.render(data);
     }
 
