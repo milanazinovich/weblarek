@@ -2,6 +2,7 @@ import { Component } from '../base/Component';
 import { IEvents } from '../base/Events';
 import { CardBasket } from './CardBasket';
 import { IProduct } from '../../types';
+import { ensureElement, setText, setDisabled, subscribe, emitEvent } from '../../utils/dom';
 
 export interface IBasketData {
     items: IProduct[];
@@ -12,15 +13,21 @@ export class Basket extends Component<IBasketData> {
     protected list: HTMLElement;
     protected total: HTMLElement;
     protected submit: HTMLElement;
+    private events: IEvents; // ← Храним события отдельно
 
     constructor(container: HTMLElement, events: IEvents) {
-        super(container, events);
-        this.list = this.ensureElement('.basket__list');
-        this.total = this.ensureElement('.basket__price');
-        this.submit = this.ensureElement('.basket__button');
+        super(container); // ← Только container, как в стартере
+        this.events = events;
 
-        this.subscribe(this.submit, 'click', () => {
-            this.emitEvent('basket:submit');
+        // ✅ Передаём container первым аргументом
+        this.list = ensureElement(container, '.basket__list');
+        this.total = ensureElement(container, '.basket__price');
+        this.submit = ensureElement(container, '.basket__button');
+
+        // ✅ Вызываем subscribe без this.
+        subscribe(this.submit, 'click', () => {
+            // ✅ Передаём this.events первым аргументом
+            emitEvent(this.events, 'basket:submit');
         });
     }
 
@@ -29,27 +36,29 @@ export class Basket extends Component<IBasketData> {
         
         if (data.items.length === 0) {
             this.list.innerHTML = '<li class="basket__empty">Корзина пуста</li>';
-            this.setDisabled(this.submit, true);
+            // ✅ Вызываем setDisabled без this.
+            setDisabled(this.submit, true);
         } else {
             data.items.forEach((item, index) => {
-                // Находим шаблон в документе
                 const template = document.getElementById('card-basket') as HTMLTemplateElement;
                 
                 if (template) {
                     const cardContainer = template.content.firstElementChild!.cloneNode(true) as HTMLElement;
-                    
-                    const card = new CardBasket(cardContainer, this.events!);
-                    
+                    const card = new CardBasket(cardContainer, this.events);
                     card.render({ ...item, index: index + 1 });
-                    
                     this.list.appendChild(card.getContainer());
                 }
             });
-            this.setDisabled(this.submit, false);
+            setDisabled(this.submit, false);
         }
 
-        this.setText(this.total, `${data.total} синапсов`);
+        // ✅ Вызываем setText без this.
+        setText(this.total, `${data.total} синапсов`);
         
         return super.render(data);
+    }
+
+    public getContainer(): HTMLElement {
+        return this.container;
     }
 }

@@ -1,22 +1,29 @@
 import { Component } from '../base/Component';
 import { IEvents } from '../base/Events';
+import { ensureElement, subscribe, emitEvent } from '../../utils/dom';
 
 export class Modal extends Component<any> {
     protected closeButton: HTMLElement;
     protected content: HTMLElement;
+    private events: IEvents; // ← Храним события отдельно
 
     constructor(container: HTMLElement, events: IEvents) {
-        super(container, events);
-        this.closeButton = this.ensureElement('.modal__close');
-        this.content = this.ensureElement('.modal__content');
+        super(container); // ← Только container, как в стартере
+        this.events = events;
 
-        this.subscribe(this.closeButton, 'click', () => {
+        // ✅ Вызываем утилиты с передачей container первым аргументом
+        this.closeButton = ensureElement(container, '.modal__close');
+        this.content = ensureElement(container, '.modal__content');
+
+        // ✅ Вызываем subscribe без this.
+        subscribe(this.closeButton, 'click', () => {
             this.close();
         });
 
-        this.subscribe(this.container, 'click', (e: Event) => {
+        subscribe(this.container, 'click', (e: Event) => {
             if (e.target === this.container) {
-                this.emitEvent('modal:close');
+                // ✅ Передаём this.events первым аргументом
+                emitEvent(this.events, 'modal:close');
             }
         });
     }
@@ -24,7 +31,7 @@ export class Modal extends Component<any> {
     public open(): void {
         this.container.classList.add('modal_active');
         document.body.style.overflow = 'hidden';
-        this.emitEvent('modal:open');
+        emitEvent(this.events, 'modal:open');
     }
 
     public render(content: HTMLElement): HTMLElement {
@@ -37,6 +44,10 @@ export class Modal extends Component<any> {
     public close(): void {
         this.container.classList.remove('modal_active');
         document.body.style.overflow = '';
-        this.emitEvent('modal:close');
+        emitEvent(this.events, 'modal:close');
+    }
+
+    public getContainer(): HTMLElement {
+        return this.container;
     }
 }

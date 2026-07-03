@@ -1,40 +1,40 @@
 import { BaseCard } from './BaseCard';
 import { IEvents } from '../base/Events';
 import { IProduct } from '../../types';
+import { subscribe, emitEvent, setText } from '../../utils/dom';
 
 interface IBasketItemData extends IProduct {
     index?: number;
 }
 
 export class CardBasket extends BaseCard {
-    protected deleteButton: HTMLElement | null; // Может быть null
+    protected deleteButton: HTMLElement | null;
     protected indexElement: HTMLElement | null;
     private _id: string = '';
 
     constructor(container: HTMLElement, events: IEvents) {
-    super(container, events);
-    
-    this.deleteButton = this.container.querySelector('.basket__item-delete');
-    this.indexElement = this.container.querySelector('.basket__item-index');
+        super(container, events); // ← BaseCard тоже принимает events!
+        
+        this.deleteButton = this.container.querySelector('.basket__item-delete');
+        this.indexElement = this.container.querySelector('.basket__item-index');
 
-    console.log('🔍 Кнопка удаления найдена:', this.deleteButton);
+        console.log('🔍 Кнопка удаления найдена:', this.deleteButton);
 
-    if (this.deleteButton) {
-        this.subscribe(this.deleteButton, 'click', () => {
-            console.log('🗑️ Клик по удалению. ID:', this._id);
-            if (this._id) {
-                this.emitEvent('basket:remove', { id: this._id });
-            }
-        });
-    } else {
-        console.warn('⚠️ Кнопка удаления НЕ найдена! Проверьте селектор .basket__item-delete');
+        if (this.deleteButton) {
+            subscribe(this.deleteButton, 'click', (e) => {
+                e.stopPropagation();
+                console.log('🗑️ Клик по удалению. ID:', this._id);
+                if (this._id) {
+                    emitEvent(this.events, 'basket:remove', { id: this._id });
+                }
+            });
+        } else {
+            console.warn('⚠️ Кнопка удаления НЕ найдена! Проверьте селектор .basket__item-delete');
+        }
     }
-}
 
     set index(value: number) {
-        if (this.indexElement) {
-            this.setText(this.indexElement, String(value));
-        }
+        setText(this.indexElement, String(value));
     }
 
     render(data: IBasketItemData): HTMLElement {
@@ -46,6 +46,10 @@ export class CardBasket extends BaseCard {
             this.index = data.index;
         }
         
+        return this.container;
+    }
+
+    public getContainer(): HTMLElement {
         return this.container;
     }
 }

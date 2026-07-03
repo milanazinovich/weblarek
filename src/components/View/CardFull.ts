@@ -1,37 +1,40 @@
 import { FullCard } from './FullCard';
 import { IEvents } from '../base/Events';
 import { IProduct } from '../../types';
+import { setText, setDisabled, subscribe, emitEvent } from '../../utils/dom';
 
 export class CardFull extends FullCard {
     protected button!: HTMLElement;
+    // ❌ НЕ ОБЪЯВЛЯЙТЕ events ЗДЕСЬ — он уже есть в BaseCard!
 
     constructor(container: HTMLElement, events: IEvents) {
-        super(container, events);
+        super(container, events); // ← events передаётся в FullCard → BaseCard
         
-        this.button = this.ensureElement('.button');
+        this.button = this.container.querySelector('.button') as HTMLElement;
 
-        this.subscribe(this.button, 'click', () => {
-            this.emitEvent('full:buy', { id: this.container.dataset.id });
+        subscribe(this.button, 'click', () => {
+            console.log('🔘 CardFull: кнопка нажата');
+            // ✅ Используем this.events (унаследован из BaseCard)
+            emitEvent(this.events, 'card:buy');
         });
     }
 
-    render(data: IProduct & { inBasket: boolean }): HTMLElement {
+    set buttonText(value: string) {
+        setText(this.button, value);
+    }
+
+    set buttonDisabled(state: boolean) {
+        setDisabled(this.button, state);
+    }
+
+    render(data: IProduct & { buttonText: string; buttonDisabled: boolean }): HTMLElement {
         super.render(data);
-        this.container.dataset.id = data.id;
+        this.buttonText = data.buttonText;
+        this.buttonDisabled = data.buttonDisabled;
+        return this.container;
+    }
 
-        if (data.inBasket) {
-            this.setText(this.button, 'Удалить из корзины');
-        } else {
-            this.setText(this.button, 'Купить');
-        }
-
-        if (data.price === null) {
-            this.setDisabled(this.button, true);
-            this.setText(this.button, 'Недоступно');
-        } else {
-            this.setDisabled(this.button, false);
-        }
-
+    public getContainer(): HTMLElement {
         return this.container;
     }
 }

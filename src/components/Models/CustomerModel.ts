@@ -74,7 +74,6 @@ export class CustomerModel {
 		this.email = '';
 		this.phone = '';
 		this.address = '';
-		this.events.emit('customer:change');
 	}
 
 	validate(): ValidationErrors {

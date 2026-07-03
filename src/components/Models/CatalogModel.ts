@@ -25,7 +25,6 @@ export class CatalogModel {
 
 	setSelectedProduct(product: IProduct): void {
 		this._selectedProduct = product;
-		this.events.emit('product:selected', product);
 	}
 
 	getSelectedProduct(): IProduct | null {

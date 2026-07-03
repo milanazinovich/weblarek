@@ -1,5 +1,6 @@
 import { Component } from '../base/Component';
 import { IEvents } from '../base/Events';
+import { ensureElement, setText, subscribe, emitEvent } from '../../utils/dom';
 
 export interface ISuccessData {
     total: number;
@@ -8,19 +9,26 @@ export interface ISuccessData {
 export class SuccessModal extends Component<ISuccessData> {
     protected close: HTMLElement;
     protected total: HTMLElement;
+    private events: IEvents;
 
     constructor(container: HTMLElement, events: IEvents) {
-        super(container, events);
-        this.close = this.ensureElement('.order-success__close');
-        this.total = this.ensureElement('.order-success__description');
+        super(container);
+        this.events = events;
 
-        this.subscribe(this.close, 'click', () => {
-            this.emitEvent('success:close');
+        this.close = ensureElement(container, '.order-success__close');
+        this.total = ensureElement(container, '.order-success__description');
+
+        subscribe(this.close, 'click', () => {
+            emitEvent(this.events, 'success:close');
         });
     }
 
     render(data: ISuccessData): HTMLElement {
-        this.setText(this.total, `Списано ${data.total} синапсов`);
+        setText(this.total, `Списано ${data.total} синапсов`);
         return super.render(data);
+    }
+
+    public getContainer(): HTMLElement {
+        return this.container;
     }
 }
