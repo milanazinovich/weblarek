@@ -11,7 +11,7 @@ export class Modal extends Component<any> {
         this.content = this.ensureElement('.modal__content');
 
         this.subscribe(this.closeButton, 'click', () => {
-            this.emitEvent('modal:close');
+            this.close();
         });
 
         this.subscribe(this.container, 'click', (e: Event) => {

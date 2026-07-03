@@ -1,7 +1,7 @@
 import { BaseCard } from './BaseCard';
 import { IEvents } from '../base/Events';
 import { IProduct } from '../../types';
-import { categoryMap } from '../../utils/constants';
+import { categoryMap, CDN_URL } from '../../utils/constants'; // Импортируем CDN_URL
 
 export abstract class FullCard extends BaseCard {
     protected description: HTMLElement | null;
@@ -23,7 +23,8 @@ export abstract class FullCard extends BaseCard {
         }
 
         if (this.image && data.image) {
-            this.setImage(this.image, data.image, data.title);
+            const imageUrl = `${CDN_URL}/${data.image}`;
+            this.setImage(this.image, imageUrl, data.title);
         }
 
         if (this.category && data.category) {

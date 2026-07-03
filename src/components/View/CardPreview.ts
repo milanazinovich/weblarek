@@ -8,17 +8,28 @@ export class CardPreview extends FullCard {
     constructor(container: HTMLElement, events: IEvents) {
         super(container, events);
         
+        // Пытаемся найти кнопку в шаблоне
         this.button = this.container.querySelector('.button') as HTMLElement;
         
+        // Если кнопки нет, создаем её динамически
         if (!this.button) {
             this.button = document.createElement('button');
             this.button.className = 'button';
             this.container.appendChild(this.button);
         }
 
+        // Обработчик кнопки "Купить/Удалить"
         this.subscribe(this.button, 'click', (e: Event) => {
-            e.stopPropagation();
+            e.stopPropagation(); // Чтобы клик не всплыл до карточки
             this.emitEvent('preview:buy', { id: this.container.dataset.id });
+        });
+
+        // === ДОБАВЬТЕ ЭТОТ БЛОК ===
+        // Обработчик клика по всей карточке для открытия модалки
+        this.subscribe(this.container, 'click', () => {
+            this.emitEvent('product:selected', { 
+                item: { id: this.container.dataset.id } 
+            });
         });
     }
 

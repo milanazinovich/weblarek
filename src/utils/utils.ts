@@ -43,13 +43,21 @@ export function ensureElement<T extends HTMLElement>(selectorElement: SelectorEl
     }
     throw new Error('Unknown selector element');
 }
-
-export function cloneTemplate<T extends HTMLElement>(query: string | HTMLTemplateElement): T {
-    const template = ensureElement(query) as HTMLTemplateElement;
-    if (!template.content.firstElementChild) {
-        throw new Error(`Template ${query} has no content`);
+export function cloneTemplate<T extends HTMLElement>(templateId: string): T {
+    // Ищем шаблон глобально по ID
+    const template = document.getElementById(templateId) as HTMLTemplateElement;
+    if (!template) {
+        throw new Error(`Шаблон с id="${templateId}" не найден в DOM`);
     }
-    return template.content.firstElementChild.cloneNode(true) as T;
+    
+    // Берём первый элемент из content шаблона
+    const element = template.content.firstElementChild;
+    if (!element) {
+        throw new Error(`Шаблон с id="${templateId}" пуст`);
+    }
+    
+    // Клонируем и возвращаем полноценный HTMLElement
+    return element.cloneNode(true) as T;
 }
 
 export function bem(block: string, element?: string, modifier?: string): { name: string, class: string } {

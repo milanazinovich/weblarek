@@ -18,10 +18,16 @@ export class BasketModel {
 		this.events.emit('basket:change');
 	}
 
-	removeItem(id: string): void {
-		this._items = this._items.filter(item => item.id !== id);
-		this.events.emit('basket:change');
-	}
+	// src/components/Models/BasketModel.ts
+
+removeItem(id: string): void {
+    const index = this._items.findIndex(item => item.id === id);
+    if (index !== -1) {
+        this._items.splice(index, 1);
+        this.events.emit('basket:change'); // ← ЭТО ДОЛЖНО БЫТЬ!
+        console.log('✅ Товар удалён, событие basket:change отправлено');
+    }
+}
 
 	clear(): void {
 		this._items = [];

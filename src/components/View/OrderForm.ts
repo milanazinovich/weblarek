@@ -3,17 +3,32 @@ import { IEvents } from '../base/Events';
 import { IBuyer } from '../../types';
 
 export class OrderForm extends Form {
-    constructor(container: HTMLElement, events: IEvents) {
-        super(container, events);
+    protected paymentButtons: NodeListOf<HTMLButtonElement>;
 
-        this.subscribe(this.container, 'change', (e: Event) => {
-            const target = e.target as HTMLInputElement;
-            if (target.name === 'payment') {
+    constructor(container: HTMLElement, events: IEvents) {
+        super(container, events, 'order');
+        
+        this.paymentButtons = this.container.querySelectorAll('button[name="card"], button[name="cash"]');
+        
+        this.paymentButtons.forEach((button, index) => {
+            console.log(`Кнопка ${index}:`, {
+                name: button.name,
+                text: button.textContent?.trim()
+            });
+            
+            this.subscribe(button, 'click', () => {
+                
+                this.paymentButtons.forEach(btn => {
+                    btn.classList.remove('button_alt-active');
+                });
+                
+                button.classList.add('button_alt-active');
+                
                 this.emitEvent('order:change', {
                     field: 'payment' as keyof IBuyer,
-                    value: target.value
+                    value: button.name // 'card' или 'cash'
                 });
-            }
+            });
         });
 
         this.subscribe(this.submit, 'click', (e: Event) => {
@@ -24,20 +39,17 @@ export class OrderForm extends Form {
 
     render(data: Partial<IBuyer>): HTMLElement {
         super.render(data);
+        this.paymentButtons = this.container.querySelectorAll('button[name="card"], button[name="cash"]');
         
-        const paymentInputs = this.container.querySelectorAll('[name="payment"]');
-        paymentInputs.forEach((element) => {
-            const input = element as HTMLInputElement;
-            const label = input.closest('.button');
-            if (label) {
-                if (input.checked) {
-                    label.classList.add('button_alt-active');
-                } else {
-                    label.classList.remove('button_alt-active');
-                }
+        this.paymentButtons.forEach(btn => {
+            if (btn.name === data.payment) {
+                btn.classList.add('button_alt-active');
+                console.log('✅ Активировал кнопку:', btn.name);
+            } else {
+                btn.classList.remove('button_alt-active');
             }
         });
-
+        
         return this.container;
     }
 }

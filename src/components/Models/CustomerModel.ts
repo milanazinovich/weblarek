@@ -11,7 +11,35 @@ export class CustomerModel {
 	constructor(events: IEvents) {
 		this.events = events;
 	}
+ // Валидация ПЕРВОГО шага (оплата + адрес)
+    validateOrderStep(): Record<string, string> {
+        const errors: Record<string, string> = {};
+        
+        if (!this.payment) {
+            errors.payment = 'Выберите способ оплаты';
+        }
+        
+        if (!this.address || this.address.trim() === '') {
+            errors.address = 'Укажите адрес';
+        }
+        
+        return errors;
+    }
 
+    // Валидация ВТОРОГО шага (email + телефон)
+    validateContactsStep(): Record<string, string> {
+        const errors: Record<string, string> = {};
+        
+        if (!this.email || !this.email.includes('@')) {
+            errors.email = 'Укажите корректный email';
+        }
+        
+        if (!this.phone || this.phone.trim() === '') {
+            errors.phone = 'Укажите телефон';
+        }
+        
+        return errors;
+    }
 	setPayment(payment: TPayment): void {
 		this.payment = payment;
 		this.events.emit('customer:change');
@@ -34,7 +62,7 @@ export class CustomerModel {
 
 	getOrderData(): IBuyer {
 		return {
-			payment: this.payment,
+			payment: this.payment!,
 			email: this.email,
 			phone: this.phone,
 			address: this.address
@@ -46,7 +74,7 @@ export class CustomerModel {
 		this.email = '';
 		this.phone = '';
 		this.address = '';
-		this.events.emit('customer:clear');
+		this.events.emit('customer:change');
 	}
 
 	validate(): ValidationErrors {
