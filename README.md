@@ -126,6 +126,52 @@ interface IBuyer {
 ```
 **Назначение:** Описывает данные покупателя, необходимые для оформления заказа. Включает выбранный способ оплаты и контактные данные для доставки.
 
+### `IOrderForm`
+```typescript
+interface IOrderForm {
+  payment: TPayment | undefined;
+  address: string;
+}
+```
+**Назначение:** Данные для формы заказа (первый шаг оформления). payment может быть undefined до выбора способа оплаты.
+
+### `IContact`
+```typescript
+interface IContact {
+  email: string;
+  phone: string;
+}
+```
+**Назначение:** Данные для формы контактов (второй шаг оформления).
+
+### `IModalCard`
+```typescript
+interface IModalCard {
+  description: string;
+  inCart?: boolean;
+  buttonText: string;
+  buttonDisabled: boolean;
+}
+```
+**Назначение:** Данные для карточки товара в модальном окне. Содержит готовые значения для отображения кнопки (текст и состояние disabled), вычисленные в презентере.
+
+### `IOrderData`
+```typescript
+interface IOrderData extends IBuyer {
+  total: number;
+  items: string[];
+}
+```
+**Назначение:** Данные для отправки заказа на сервер. Расширяет IBuyer полями общей суммы и списка ID товаров.
+
+### `IOrderResult`
+```typescript
+interface IOrderResult {
+  id: string;
+  total: number;
+}
+```
+**Назначение:** Ответ сервера после успешного оформления заказа. Содержит ID заказа и итоговую сумму.
 ---
 
 ## Модели данных
@@ -203,169 +249,176 @@ interface IBuyer {
 
 Классы, отвечающие за отрисовку интерфейса и перехват пользовательских событий. Не содержат бизнес-логики и общаются с остальным приложением через события.
 
-### Иерархия наследования карточек
-Так как HTML-шаблоны для карточки в каталоге и карточки в корзине отличаются, реализована двухуровневая структура:
-1. **`BaseCard`** — минимальная карточка (заголовок, цена).
-2. **`FullCard`** (наследует `BaseCard`) — полная карточка (добавляет картинку, описание, категорию).
-3. **`Card`** (наследует `FullCard`) — универсальная карточка с параметром isPreview для работы в двух режимах.
-
 ### `Component<T>` (Базовый UI-компонент)
-**Назначение:** Фундамент для всех визуальных элементов. Управляет корневым DOM-элементом и подпиской на события.
+**Назначение:** Фундамент для всех визуальных элементов. Управляет корневым DOM-элементом.
 **Наследование:** Абстрактный класс.
-**Конструктор:** `constructor(container: HTMLElement, events?: IEvents)`
+**Конструктор:** `constructor(container: HTMLElement)`
 **Поля:**
 - `container: HTMLElement` — корневой DOM-элемент компонента.
-- `events?: IEvents` — брокер событий.
 **Методы:**
 - `render(data?: Partial<T>): HTMLElement` — возвращает корневой DOM-элемент. В дочерних классах заполняет DOM данными.
-- `getContainer(): HTMLElement` — публичный геттер для доступа к контейнеру.
-- `setText(element: HTMLElement, value: unknown): void` — устанавливает текстовое содержимое.
-- `setImage(element: HTMLImageElement, src: string, alt?: string): void` — обновляет источник и alt изображения.
-- `setDisabled(element: HTMLElement, state: boolean): void` — управляет состоянием `disabled`.
-- `toggleClass(element: HTMLElement, className: string, force?: boolean): void` — переключает класс элемента.
-- `subscribe(element, event, handler): void` — подписка на DOM-события.
-- `emitEvent(event, data): void` — генерация события через брокер.
 
 ---
 
 ### Карточки товаров
 
 #### `BaseCard` (Базовая карточка)
-**Назначение:** Родитель для карточек, у которых есть только название и цена (используется для корзины).
-**Наследование:** `extends Component<IProduct>`
+**Назначение:** Родитель для карточек, у которых есть только название и цена.
+**Наследование:** `extends Component<T>`
 **Поля:**
 - `protected titleElement: HTMLElement` — элемент заголовка.
 - `protected priceElement: HTMLElement` — элемент цены.
+- `protected events: IEvents` — брокер событий.
 **Методы:**
-- `set title(value: string)` — сеттер для заголовка.
-- `set price(value: number | null)` — сеттер для цены.
+- `setTitle(value: string): void` — устанавливает заголовок.
+- `setPrice(value: number | null): void` — устанавливает цену (если null — "Бесценно").
+- `setImage(element: HTMLImageElement, src: string, alt?: string): void` — устанавливает изображение.
 
-#### `FullCard` (Полная карточка)
-**Назначение:** Родитель для карточек с расширенной информацией.
-**Наследование:** `extends BaseCard`
+#### `CatalogCard` (Карточка в каталоге)
+**Назначение:** Карточка товара для отображения в каталоге на главной странице.
+**Наследование:** `extends BaseCard<IProduct>`
 **Поля:**
-- `protected descriptionElement: HTMLElement` — элемент описания.
 - `protected imageElement: HTMLImageElement` — элемент изображения.
 - `protected categoryElement: HTMLElement` — элемент категории.
+**Конструктор:** `constructor(container: HTMLElement, events: IEvents, onClick: (e: Event) => void)`
 **Методы:**
-- `set description(value: string)` — сеттер для описания.
-- `set image(value: string)` — сеттер для изображения.
-- `set category(value: string)` — сеттер для категории.
-
-#### `Card`(Универсальная карточка)
-**Назначение:** Универсальная карточка, работающая в двух режимах: превью и полная.
-**Наследование:** extends FullCard
-**Поля:**
-- `protected button: HTMLElement | null` — кнопка действия.
-- `protected isPreview: boolean` — флаг режима.
-**Методы:**
-- `render(data: ICardData): HTMLElement` — универсальный рендер с управлением кнопкой.
-- `updateButton(text: string, disabled: boolean): void` — обновление кнопки без полного рендера.
+- `render(data?: Partial<IProduct>): HTMLElement` — рендерит карточку с категорией, изображением, названием и ценой.
 **События:**
-- `preview:buy` — клик по кнопке в режиме превью.
-- `card:buy` — клик по кнопке в режиме полной карточки.
-- `product:selected` — клик по карточке в режиме превью.
+- `product:select` — клик по карточке (генерируется через переданный обработчик).
+
+#### `ModalCard` (Карточка для модального окна)
+**Назначение:** Карточка для отображения детальной информации о товаре в модальном окне.
+**Наследование:** `extends CatalogCard`
+**Поля:**
+- `protected buttonElement: HTMLButtonElement` — кнопка действия.
+- `protected descriptionElement: HTMLElement` — элемент описания.
+**Конструктор:** `constructor(container: HTMLElement, events: IEvents, onClick: (e: Event) => void)`
+**Сеттеры:**
+- `description(value: string): void` — устанавливает описание.
+- `buttonText(value: string): void` — устанавливает текст кнопки.
+- `buttonDisabled(value: boolean): void` — управляет состоянием кнопки.
+**События:**
+- `card:buy` — клик по кнопке (без id, товар берется из модели).
 
 #### `CardBasket` (Товар в корзине)
-**Назначение:** Элемент списка в модальном окне корзины. Содержит только заголовок, цену и кнопку удаления.
-**Наследование:** `extends BaseCard`
-**Методы:**
-- `render(data: IProduct): HTMLElement` — рендерит элемент списка.
+**Назначение:** Элемент списка в модальном окне корзины. Содержит индекс, название, цену и кнопку удаления.
+**Наследование:** `extends BaseCard<IBasketItem>`
+**Поля:**
+- `protected deleteButton: HTMLButtonElement` — кнопка удаления.
+- `protected indexElement: HTMLElement` — элемент с индексом.
+**Конструктор:** `constructor(container: HTMLElement, events: IEvents, productId: string)`
 **События:**
-- `basket:remove` — клик по кнопке удаления товара.
+- `basket:remove` — клик по кнопке удаления товара (генерируется через id из конструктора).
 
 ---
 
 ### Формы
 
 #### `Form` (Базовая форма)
-**Назначение:** Логика работы с полями ввода, заполнением и валидацией.
-**Наследование:** `extends Component<IBuyer>`
+**Назначение:** Базовый класс для всех форм. Управляет полями ввода, валидацией и кнопкой отправки.
+**Наследование:** `extends Component<T>`
 **Поля:**
 - `protected submit: HTMLButtonElement` — кнопка отправки.
 - `protected errors: HTMLElement` — элемент для вывода ошибок.
-- `protected inputs: Map<string, HTMLInputElement>` — кэш полей ввода.
-- `protected formName: string` — имя формы.
-**Методы:**
-- `set address(value: string)` — сеттер для адреса.
-- `set email(value: string)` — сеттер для email.
-- `set phone(value: string)` — сеттер для телефона.
-- `set payment(value: string)` — сеттер для способа оплаты.
-- `set errorText(value: string)` — сеттер для текста ошибки.
-- `set isValid(value: boolean)` — сеттер для валидности.
+- `protected events: IEvents` — брокер событий.
+**Сеттеры:**
+- `errorText(value: string): void` — устанавливает текст ошибки.
+- `isValid(value: boolean): void` — блокирует/разблокирует кнопку отправки.
 **События:**
-- Генерирует события вида `${formName}:change` при вводе данных в поля.
+- `form:change` — изменение любого поля формы.
 
-#### `OrderForm` (Форма 1: Оплата и Адрес)
-**Назначение:** Первый шаг оформления заказа.
-**Наследование:** `extends Form`
+#### `OrderForm` (Форма заказа)
+**Назначение:** Первый шаг оформления заказа — выбор способа оплаты и ввод адреса.
+**Наследование:** `extends Form<IOrderForm>`
 **Поля:**
-- `protected paymentButtons: NodeListOf<HTMLButtonElement>` — кнопки выбора способа оплаты.
+- `protected addressInput: HTMLInputElement` — поле для ввода адреса.
+- `protected cardButton: HTMLButtonElement` — кнопка выбора оплаты картой.
+- `protected cashButton: HTMLButtonElement` — кнопка выбора оплаты наличными.
 **Методы:**
-- `set selectedPayment(value: string)` — сеттер для выбранного способа оплаты.
+- `setPayment(payment: TPayment): void` — выделяет выбранный способ оплаты.
 **События:**
-- `order:submit` — нажатие кнопки "Далее".
+- `order:payment-change` — изменение адреса или способа оплаты.
+- `order:submit` — отправка формы (переход к контактам).
 
-#### `ContactsForm` (Форма 2: Контакты)
-**Назначение:** Второй шаг оформления заказа.
-**Наследование:** `extends Form`
+#### `ContactsForm` (Форма контактов)
+**Назначение:** Второй шаг оформления заказа — ввод email и телефона.
+**Наследование:** `extends Form<IContact>`
+**Поля:**
+- `protected email: HTMLInputElement` — поле для ввода email.
+- `protected phone: HTMLInputElement` — поле для ввода телефона.
 **События:**
-- `contacts:submit` — нажатие кнопки "Оплатить".
+- `order:contacts-change` — изменение email или телефона.
+- `contacts:submit` — отправка формы (оформление заказа).
 
 ---
 
 ### `Modal` (Модальное окно)
 **Назначение:** Универсальный контейнер для отображения контента поверх страницы.
-**Наследование:** `extends Component`
+**Наследование:** `extends Component<IModal>`
 **Поля:**
 - `protected closeButton: HTMLElement` — кнопка закрытия.
-- `protected content: HTMLElement` — контейнер для контента.
+- `protected contentElement: HTMLElement` — контейнер для контента.
+- `private events: IEvents` — брокер событий.
 **Методы:**
-- `open(): void` — добавляет класс активности, блокирует скролл body.
-- `close(): void` — скрывает окно, возвращает скролл.
-- `render(content: HTMLElement): HTMLElement` — очищает содержимое модалки и вставляет туда переданный элемент.
-
-### `Page` (Главная страница)
-**Назначение:** Управляет общей разметкой страницы.
-**Наследование:** `extends Component`
-**Поля:**
-- `protected catalog: HTMLElement` — контейнер для карточек товаров.
-**Методы:**
-- `setCatalog(items: HTMLElement[]): void` — отрисовывает сетку товаров.
-
-#### `HeaderBasket` (Корзина в хедере)
-**Назначение:** Управляет отображением иконки корзины и счетчика товаров в хедере.
-**Наследование:** extends Component
-**Поля:**
-- `protected basket: HTMLElement` — иконка корзины.
-- `protected counter: HTMLElement` — счетчик товаров.
-**Методы:**
-- `setCounter(count: number): void` — обновляет счетчик.
+- `open(content?: HTMLElement): void` — открывает модальное окно.
+- `close(): void` — закрывает модальное окно.
+- `setContent(content: HTMLElement): void` — устанавливает содержимое модального окна.
 **События:**
-- `page:basket` — клик по иконке корзины.\
+- `modal:close` — закрытие модального окна.
 
-#### `Basket` (Корзина в модалке)
+---
+
+### `Catalog` (Главная страница)
+**Назначение:** Управляет отображением каталога товаров на главной странице.
+**Наследование:** `extends Component<ICatalog>`
+**Поля:**
+- `container: HTMLElement` — контейнер для карточек.
+**Сеттеры:**
+- `catalog(items: HTMLElement[]): void` — устанавливает карточки в каталог.
+
+---
+
+### `Basket` (Корзина в модалке)
 **Назначение:** Отображает содержимое корзины в модальном окне.
-**Наследование:** extends Component
+**Наследование:** `extends Component<IBasketData>`
 **Поля:**
 - `protected list: HTMLElement` — список товаров.
-- `protected total: HTMLElement` — общая стоимость.
-- `protected button: HTMLElement` — кнопка "Оформить".
-**Методы:**
-- `render(data: { items: IProduct[]; total: number }): HTMLElement` — отрисовывает список и общую стоимость.
+- `protected total: HTMLElement` — элемент с общей стоимостью.
+- `protected submit: HTMLButtonElement` — кнопка "Оформить".
+- `private events: IEvents` — брокер событий.
+**Сеттеры:**
+- `items(items: HTMLElement[]): void` — устанавливает список товаров.
+- `totalPrice(value: number): void` — устанавливает общую стоимость.
 **События:**
 - `basket:submit` — клик по кнопке "Оформить".
 
-#### `SuccessModal` (Успешный заказ)
+---
+
+### `HeaderBasket` (Корзина в хедере)
+**Назначение:** Отображает иконку корзины и счетчик товаров в хедере.
+**Наследование:** `extends Component<IHeader>`
+**Поля:**
+- `protected counterElement: HTMLElement` — элемент счетчика.
+- `protected basketButton: HTMLButtonElement` — кнопка открытия корзины.
+**Сеттеры:**
+- `counter(value: number): void` — обновляет счетчик.
+**События:**
+- `basket:open` — клик по иконке корзины.
+
+---
+
+### `SuccessModal` (Успешный заказ)
 **Назначение:** Отображает сообщение об успешном оформлении заказа.
-**Наследование:** extends Component
+**Наследование:** `extends Component<ISuccess>`
 **Поля:**
 - `protected description: HTMLElement` — элемент с описанием.
 - `protected closeButton: HTMLElement` — кнопка закрытия.
+- `private events: IEvents` — брокер событий.
 **Методы:**
 - `render(data: { total: number }): HTMLElement` — отображает сумму заказа.
 **События:**
 - `success:close` — клик по кнопке закрытия.
+
 ---
 
 ## Презентер
@@ -386,18 +439,15 @@ interface IBuyer {
 - `customer:change` — данные покупателя изменились. Презентер проверяет валидность формы и активирует/деактивирует кнопку отправки.
 
 #### События от Представлений (действия пользователя):
-- `page:basket` — клик по иконке корзины в хедере. Презентер открывает модальное окно корзины.
-- `product:selected` — товар выбран для детального просмотра. Презентер открывает модальное окно с полной карточкой товара.
-- `preview:buy` — клик по кнопке «Купить». Презентер добавляет товар в корзину или удаляет его, если он уже есть.
-- `card:buy` — клик по кнопке в модальном окне с деталями товара. Презентер добавляет или удаляет товар из корзины.
+- `basket:open` — клик по иконке корзины в хедере. Презентер открывает модальное окно корзины.
+- `product:select` — товар выбран для детального просмотра. Презентер открывает модальное окно с полной карточкой товара.
+- `card:buy` — клик по кнопке в модальном окне с деталями товара. Презентер добавляет или удаляет товар из корзины и закрывает модалку.
 - `basket:remove` — клик по кнопке удаления товара из корзины. Презентер удаляет товар и обновляет корзину.
 - `basket:submit` — клик по кнопке "Оформить" в корзине. Презентер открывает форму заказа.
-- `modal:close` — закрытие модального окна. Презентер скрывает окно.
-- `order:change` / `contacts:change` — изменение полей формы. Презентер обновляет данные в Модели покупателя и проверяет валидность.
-- `order:change` — изменение полей формы заказа. Презентер обновляет данные в Модели покупателя и проверяет валидность.
+- `order:payment-change` — изменение полей формы заказа. Презентер обновляет данные в Модели покупателя.
 - `order:submit` — переход ко второму шагу оформления. Презентер переключает формы в модальном окне.
+- `order:contacts-change` — изменение полей формы контактов. Презентер обновляет данные в Модели покупателя.
 - `contacts:submit` — завершение оформления заказа. Презентер отправляет данные на сервер, очищает корзину и показывает успех.
-- `contacts:submit` — нажатие кнопки "Оплатить". Презентер отправляет заказ на сервер, очищает корзину и показывает сообщение об успехе.
 - `modal:close` — закрытие модального окна. Презентер скрывает окно.
 - `success:close` — закрытие окна успеха. Презентер закрывает модальное окно.
 
@@ -406,15 +456,9 @@ interface IBuyer {
 - Презентер не хранит данные, только работает с Моделями.
 - Презентер не знает о структуре DOM, только работает с Представлениями.
 - Все зависимости внедряются через конструкторы (инверсия зависимостей).
-- Компоненты используют утилиты из utils/dom.ts для работы с DOM.
-- Формы используют сеттеры для обновления состояния (errorText, isValid), а не методы с логикой валидации.
+- Вся логика отображения кнопок (текст, состояние disabled) находится в презентере.
+- Id товаров передаются через замыкания в обработчиках или через конструкторы компонентов.
 
 ### Утилиты
-- `ensureElement<T extends HTMLElement>(container: HTMLElement, selector: string): T` — поиск элемента с проверкой на существование.
-- `setText(element: HTMLElement | null, value: unknown): void` — установка текстового содержимого.
-- `setImage(element: HTMLImageElement | null, src: string, alt?: string): void` — установка изображения.
-- `setDisabled(element: HTMLElement | null, state: boolean): void` — управление состоянием disabled.
-- `setHidden(element: HTMLElement | null, state: boolean): void` — управление видимостью.
-- `toggleClass(element: HTMLElement | null, className: string, force?: boolean): void` — переключение класса.
--  `subscribe(element: HTMLElement, event: string, handler: (e: Event) => void): void` — подписка на DOM-события.
-- `emitEvent(events: IEvents, event: string, data?: unknown): void` — генерация события.
+- `ensureElement<T extends HTMLElement>(selector: string, container: HTMLElement): T` — поиск элемента с проверкой на существование.
+- `cloneTemplate<T extends HTMLElement>(templateId: string): T` — клонирование HTML-шаблона.

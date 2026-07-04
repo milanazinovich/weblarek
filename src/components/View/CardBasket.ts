@@ -1,50 +1,48 @@
-import { BaseCard } from './BaseCard';
-import { IEvents } from '../base/Events';
-import { IProduct } from '../../types';
-import { subscribe, emitEvent, setText } from '../../utils/dom';
+import { BaseCard } from "./BaseCard";
+import { IEvents } from "../base/Events";
+import { IBasketItem } from "../../types";
+import { ensureElement } from "../../utils/utils";
 
-interface IBasketItemData extends IProduct {
-    index?: number;
-}
+export class CardBasket extends BaseCard<IBasketItem> {
+  protected deleteButton: HTMLButtonElement;
+  protected indexElement: HTMLElement;
 
-export class CardBasket extends BaseCard {
-    protected deleteButton: HTMLElement | null;
-    protected indexElement: HTMLElement | null;
-    private _id: string = '';
+  constructor(
+    container: HTMLElement,
+    events: IEvents,
+    private productId: string,
+  ) {
+    super(container, events);
 
-    constructor(container: HTMLElement, events: IEvents) {
-        super(container, events);
-        
-        this.deleteButton = this.container.querySelector('.basket__item-delete');
-        this.indexElement = this.container.querySelector('.basket__item-index');
+    this.deleteButton = ensureElement<HTMLButtonElement>(
+      ".basket__item-delete",
+      this.container,
+    );
+    this.indexElement = ensureElement<HTMLElement>(
+      ".basket__item-index",
+      this.container,
+    );
 
-        if (this.deleteButton) {
-            subscribe(this.deleteButton, 'click', (e) => {
-                e.stopPropagation();
-                if (this._id) {
-                    emitEvent(this.events, 'basket:remove', { id: this._id });
-                }
-            });
-        }
+    if (this.deleteButton) {
+      this.deleteButton.addEventListener("click", (e) => {
+        e.stopPropagation();
+        e.preventDefault();
+        this.events.emit("basket:remove", { id: this.productId });
+      });
+    }
+  }
+
+  render(data?: Partial<IBasketItem>): HTMLElement {
+    super.render(data);
+
+    if (!data) {
+      return this.container;
     }
 
-    set index(value: number) {
-        setText(this.indexElement, String(value));
+    if (data.index !== undefined) {
+      this.indexElement.textContent = String(data.index);
     }
 
-    render(data: IBasketItemData): HTMLElement {
-        super.render(data);
-        
-        this._id = data.id;
-        
-        if (data.index !== undefined) {
-            this.index = data.index;
-        }
-        
-        return this.container;
-    }
-
-    public getContainer(): HTMLElement {
-        return this.container;
-    }
+    return this.container;
+  }
 }

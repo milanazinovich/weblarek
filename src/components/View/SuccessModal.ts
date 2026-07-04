@@ -1,34 +1,34 @@
-import { Component } from '../base/Component';
-import { IEvents } from '../base/Events';
-import { ensureElement, setText, subscribe, emitEvent } from '../../utils/dom';
+import { Component } from "../base/Component";
+import { IEvents } from "../base/Events";
+import { ISuccess } from "../../types";
+import { ensureElement } from "../../utils/utils";
 
-export interface ISuccessData {
-    total: number;
-}
+export class SuccessModal extends Component<ISuccess> {
+  protected description: HTMLElement;
+  protected closeButton: HTMLElement;
+  private events: IEvents;
 
-export class SuccessModal extends Component<ISuccessData> {
-    protected close: HTMLElement;
-    protected total: HTMLElement;
-    private events: IEvents;
+  constructor(container: HTMLElement, events: IEvents) {
+    super(container);
+    this.events = events;
 
-    constructor(container: HTMLElement, events: IEvents) {
-        super(container);
-        this.events = events;
+    this.description = ensureElement<HTMLElement>(
+      ".order-success__description",
+      this.container,
+    );
+    this.closeButton = ensureElement<HTMLElement>(
+      ".order-success__close",
+      this.container,
+    );
+    this.closeButton.addEventListener("click", () => {
+      this.events.emit("success:close");
+    });
+  }
 
-        this.close = ensureElement(container, '.order-success__close');
-        this.total = ensureElement(container, '.order-success__description');
-
-        subscribe(this.close, 'click', () => {
-            emitEvent(this.events, 'success:close');
-        });
+  render(data?: Partial<ISuccess>): HTMLElement {
+    if (data && data.total !== undefined) {
+      this.description.textContent = `Списано ${data.total} синапсов`;
     }
-
-    render(data: ISuccessData): HTMLElement {
-        setText(this.total, `Списано ${data.total} синапсов`);
-        return super.render(data);
-    }
-
-    public getContainer(): HTMLElement {
-        return this.container;
-    }
+    return this.container;
+  }
 }

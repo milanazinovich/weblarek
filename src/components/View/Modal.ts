@@ -1,45 +1,58 @@
-import { Component } from '../base/Component';
-import { IEvents } from '../base/Events';
-import { ensureElement, subscribe, emitEvent } from '../../utils/dom';
+import { ensureElement } from "../../utils/utils";
+import { Component } from "../base/Component";
+import { IEvents } from "../base/Events";
 
-export class Modal extends Component<any> {
-    protected closeButton: HTMLElement;
-    protected content: HTMLElement;
-    private events: IEvents;
+export interface IModal {
+  content?: HTMLElement;
+}
 
-    constructor(container: HTMLElement, events: IEvents) {
-        super(container);
-        this.events = events;
-        this.closeButton = ensureElement(container, '.modal__close');
-        this.content = ensureElement(container, '.modal__content');
+export class Modal extends Component<IModal> {
+  protected closeButton: HTMLElement;
+  protected contentElement: HTMLElement;
+  private events: IEvents;
 
-        subscribe(this.closeButton, 'click', () => {
-            this.close();
-        });
+  constructor(container: HTMLElement, events: IEvents) {
+    super(container);
+    this.events = events;
+    this.closeButton = ensureElement<HTMLElement>(
+      ".modal__close",
+      this.container,
+    );
+    this.contentElement = ensureElement<HTMLElement>(
+      ".modal__content",
+      this.container,
+    );
 
-        subscribe(this.container, 'click', (e: Event) => {
-            if (e.target === this.container) {
-                emitEvent(this.events, 'modal:close');
-            }
-        });
+    this.closeButton.addEventListener("click", () => {
+      this.close();
+    });
+
+    this.container.addEventListener("click", (e: Event) => {
+      if (e.target === this.container) {
+        this.close();
+      }
+    });
+  }
+
+  setContent(content: HTMLElement) {
+    this.contentElement.replaceChildren(content);
+  }
+
+  open(content?: HTMLElement) {
+    if (content) {
+      this.setContent(content);
     }
+    this.container.classList.add("modal_active");
+  }
 
-    public open(): void {
-        this.container.classList.add('modal_active');
+  render(data?: Partial<IModal>): HTMLElement {
+    if (data?.content) {
+      this.setContent(data.content);
     }
+    return this.container;
+  }
 
-    public render(content: HTMLElement): HTMLElement {
-        this.content.innerHTML = '';
-        this.content.appendChild(content);
-        this.open();
-        return this.container;
-    }
-
-    public close(): void {
-        this.container.classList.remove('modal_active');
-    }
-
-    public getContainer(): HTMLElement {
-        return this.container;
-    }
+  close() {
+    this.container.classList.remove("modal_active");
+  }
 }

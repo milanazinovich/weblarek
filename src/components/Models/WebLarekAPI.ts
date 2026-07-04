@@ -1,5 +1,5 @@
-import { Api } from '../base/Api';
-import { IProductListResponse, IOrderData, IOrderResult } from '../../types';
+import { Api } from "../base/Api";
+import { IProductListResponse, IOrderData, IOrderResult } from "../../types";
 
 export class WebLarekAPI extends Api {
   constructor(baseUrl: string, options?: RequestInit) {
@@ -7,10 +7,10 @@ export class WebLarekAPI extends Api {
   }
 
   getProducts() {
-    return this.get<IProductListResponse>('/product');
+    return this.get<IProductListResponse>("/product");
   }
 
   createOrder(order: IOrderData) {
-    return this.post<IOrderResult>('/order', order);
+    return this.post<IOrderResult>("/order", order);
   }
 }

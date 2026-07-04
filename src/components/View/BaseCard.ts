@@ -1,30 +1,39 @@
-import { Component } from '../base/Component';
-import { IEvents } from '../base/Events';
-import { IProduct } from '../../types';
-import { ensureElement, setText } from '../../utils/dom';
+import { Component } from "../base/Component";
+import { IEvents } from "../base/Events";
+import { IBaseCard } from "../../types";
+import { ensureElement } from "../../utils/utils";
 
-export abstract class BaseCard extends Component<IProduct> {
-    protected titleElement: HTMLElement;
-    protected priceElement: HTMLElement;
-    protected events: IEvents;
+export abstract class BaseCard<T extends IBaseCard> extends Component<T> {
+  protected titleElement: HTMLElement;
+  protected priceElement: HTMLElement;
+  protected events: IEvents;
 
-    constructor(container: HTMLElement, events: IEvents) {
-        super(container);
-        this.events = events;
+  constructor(container: HTMLElement, events: IEvents) {
+    super(container);
+    this.events = events;
 
-        this.titleElement = ensureElement(container, '.card__title');
-        this.priceElement = ensureElement(container, '.card__price');
+    this.titleElement = ensureElement<HTMLElement>(
+      ".card__title",
+      this.container,
+    );
+    this.priceElement = ensureElement<HTMLElement>(
+      ".card__price",
+      this.container,
+    );
+  }
+
+  render(data?: Partial<T>): HTMLElement {
+    if (data) {
+      if (data.title !== undefined) {
+        this.titleElement.textContent = data.title;
+      }
+
+      if (data.price !== undefined) {
+        this.priceElement.textContent =
+          data.price === null ? "Бесценно" : `${data.price} синапсов`;
+      }
     }
 
-   set title(value: string) {
-        setText(this.titleElement, value);
-    }
-
-    set price(value: number | null) {
-        setText(this.priceElement, value ? `${value} синапсов` : 'Бесценно');
-    }
-
-    public getContainer(): HTMLElement {
-        return this.container;
-    }
+    return this.container;
+  }
 }
