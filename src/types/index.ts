@@ -7,17 +7,12 @@ export interface IProduct {
     price: number | null;
     inCart?: boolean;
     index?: number;
+    buttonText: string;
+    buttonDisabled: boolean;
 }
 
 export interface ISuccess {
     total: number;
-}
-
-export interface IModalCard {
-    description: string;
-    inCart?: boolean;
-    buttonText: string;
-    buttonDisabled: boolean;
 }
 
 export interface ICatalog {

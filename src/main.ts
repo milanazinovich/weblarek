@@ -1,7 +1,7 @@
 import "./scss/styles.scss";
 
 import { API_URL } from "./utils/constants";
-import { cloneTemplate, ensureElement } from "./utils/utils";
+import { cloneTemplate } from "./utils/utils";
 
 import { EventEmitter } from "./components/base/Events";
 import { WebLarekAPI } from "./components/Models/WebLarekAPI";
@@ -29,39 +29,49 @@ const catalogModel = new CatalogModel(events);
 const basketModel = new BasketModel(events);
 const customerModel = new CustomerModel(events);
 
-const headerBasket = new HeaderBasket(events, document.body);
-const modal = new Modal(
-  document.querySelector("#modal-container") as HTMLElement,
-  events,
+const headerBasket = new HeaderBasket(document.body, () => {
+    events.emit("basket:open");
+  }
 );
+
+const modal = new Modal(document.querySelector("#modal-container") as HTMLElement, events);
+
 const catalog = new Catalog(document.querySelector(".gallery") as HTMLElement);
 const basket = new Basket(cloneTemplate("basket"), events);
 const orderForm = new OrderForm(cloneTemplate("order"), events);
 const contactsForm = new ContactsForm(cloneTemplate("contacts"), events);
 const successModal = new SuccessModal(cloneTemplate("success"), events);
+const modalCard = new ModalCard(cloneTemplate("card-preview"), events, () => {});
 
 function createCatalogCard(product: IProduct): HTMLElement {
-  const card = new CatalogCard(cloneTemplate("card-catalog"), events, () => {
-    events.emit("product:select", { id: product.id });
-  });
+  const card = new CatalogCard( cloneTemplate("card-catalog"), events, () => {
+      events.emit("product:select", { id: product.id });
+    }
+  );
+  
   card.render({
     ...product,
     inCart: basketModel.hasItem(product.id),
   });
+  
   return card.render();
 }
 
 function createBasketItem(product: IProduct, index: number): HTMLElement {
-    const card = new CardBasket(
-        cloneTemplate('card-basket'),
-        events,
-        product.id
-    );
-    card.render({
-        ...product,
-        index: index + 1
-    });
-    return card.render();
+  const card = new CardBasket(
+    cloneTemplate('card-basket'),
+    events,
+    () => {
+      events.emit('basket:remove', { id: product.id });
+    }
+  );
+  
+  card.render({
+    ...product,
+    index: index + 1
+  });
+  
+  return card.render();
 }
 
 function renderCatalog(): void {
@@ -73,9 +83,9 @@ function renderCatalog(): void {
 function renderBasket(): void {
   const items = basketModel.getItems();
   const views = items.map((product, index) => createBasketItem(product, index));
-
-  basket.items = views;
-  basket.totalPrice = basketModel.getTotalPrice();
+  
+  basket.items = views; 
+  basket.totalPrice = basketModel.getTotalPrice(); 
   headerBasket.counter = basketModel.getTotalItems();
 }
 
@@ -113,13 +123,35 @@ function renderContactsForm(): void {
   contactsForm.isValid = Object.keys(contactsErrors).length === 0;
 }
 
+function renderModalCard(product: IProduct): void {
+  let buttonText: string;
+  let buttonDisabled: boolean;
+
+  if (product.price === null) {
+    buttonText = "Недоступно";
+    buttonDisabled = true;
+  } else if (basketModel.hasItem(product.id)) {
+    buttonText = "Удалить из корзины";
+    buttonDisabled = false;
+  } else {
+    buttonText = "В корзину";
+    buttonDisabled = false;
+  }
+
+  modalCard.render({
+    ...product,
+    description: product.description,
+    buttonText: buttonText,
+    buttonDisabled: buttonDisabled,
+  });
+}
+
 events.on("catalog:changed", () => {
   renderCatalog();
 });
 
 events.on("basket:change", () => {
   renderBasket();
-  renderCatalog();
 });
 
 events.on("customer:change", () => {
@@ -127,8 +159,15 @@ events.on("customer:change", () => {
   renderContactsForm();
 });
 
+events.on("product:selected", () => {
+  const product = catalogModel.getSelectedProduct();
+  if (!product) return;
+  
+  renderModalCard(product);
+  modal.open(modalCard.render());
+});
+
 events.on("basket:open", () => {
-  renderBasket();
   modal.open(basket.render());
 });
 
@@ -137,7 +176,6 @@ events.on("basket:remove", (data: { id: string }) => {
 });
 
 events.on("basket:submit", () => {
-  renderOrderForm();
   modal.open(orderForm.render());
 });
 
@@ -150,7 +188,6 @@ events.on("order:payment-change", (data: { field: string; value: string }) => {
 });
 
 events.on("order:submit", () => {
-  renderContactsForm();
   modal.open(contactsForm.render());
 });
 
@@ -167,7 +204,7 @@ events.on("contacts:submit", async () => {
   const items = basketModel.getItems();
 
   const order: IOrderData = {
-    payment: orderData.payment || "cash",
+    payment: orderData.payment,
     email: orderData.email,
     phone: orderData.phone,
     address: orderData.address,
@@ -191,35 +228,7 @@ events.on("contacts:submit", async () => {
 events.on("product:select", (data: { id: string }) => {
   const product = catalogModel.getItemById(data.id);
   if (!product) return;
-
   catalogModel.setSelectedProduct(product);
-
-  const card = new ModalCard(cloneTemplate("card-preview"), events, () => {
-    events.emit("product:select", { id: product.id });
-  });
-
-  let buttonText: string;
-  let buttonDisabled: boolean;
-
-  if (product.price === null) {
-    buttonText = "Недоступно";
-    buttonDisabled = true;
-  } else if (basketModel.hasItem(product.id)) {
-    buttonText = "Удалить из корзины";
-    buttonDisabled = false;
-  } else {
-    buttonText = "В корзину";
-    buttonDisabled = false;
-  }
-
-  const renderedCard = card.render({
-    ...product,
-    description: product.description,
-    buttonText: buttonText,
-    buttonDisabled: buttonDisabled,
-  });
-
-  modal.open(renderedCard);
 });
 
 events.on("card:buy", () => {

@@ -11,29 +11,12 @@ export class OrderForm extends Form<IOrderForm> {
   constructor(container: HTMLElement, events: IEvents) {
     super(container, events);
 
-    this.addressInput = ensureElement<HTMLInputElement>(
-      'input[name="address"]',
-      this.container,
-    );
-    this.cardButton = ensureElement<HTMLButtonElement>(
-      'button[name="card"]',
-      this.container,
-    );
-    this.cashButton = ensureElement<HTMLButtonElement>(
-      'button[name="cash"]',
-      this.container,
-    );
-
-    this.addressInput.addEventListener("input", () => {
-      this.events.emit("order:payment-change", {
-        field: "address",
-        value: this.addressInput.value,
-      });
-    });
+    this.addressInput = ensureElement<HTMLInputElement>('input[name="address"]', this.container);
+    this.cardButton = ensureElement<HTMLButtonElement>('button[name="card"]', this.container);
+    this.cashButton = ensureElement<HTMLButtonElement>('button[name="cash"]', this.container);
 
     this.cardButton.addEventListener("click", (event) => {
       event.preventDefault();
-      this.setPayment("card");
       this.events.emit("order:payment-change", {
         field: "payment",
         value: "card",
@@ -42,7 +25,6 @@ export class OrderForm extends Form<IOrderForm> {
 
     this.cashButton.addEventListener("click", (event) => {
       event.preventDefault();
-      this.setPayment("cash");
       this.events.emit("order:payment-change", {
         field: "payment",
         value: "cash",
@@ -55,7 +37,11 @@ export class OrderForm extends Form<IOrderForm> {
     });
   }
 
-  protected setPayment(payment: TPayment): void {
+  set address(value: string) {
+    this.addressInput.value = value;
+  }
+
+  set selectedPayment(payment: TPayment | undefined) {
     this.cardButton.classList.remove("button_alt-active");
     this.cashButton.classList.remove("button_alt-active");
 
@@ -64,21 +50,5 @@ export class OrderForm extends Form<IOrderForm> {
     } else if (payment === "cash") {
       this.cashButton.classList.add("button_alt-active");
     }
-  }
-
-  render(data?: Partial<IOrderForm>): HTMLElement {
-    if (data) {
-      if (data.address !== undefined) {
-        this.addressInput.value = data.address;
-      }
-      if (data.payment !== undefined) {
-        this.setPayment(data.payment);
-      } else {
-        this.cardButton.classList.remove("button_alt-active");
-        this.cashButton.classList.remove("button_alt-active");
-      }
-    }
-
-    return this.container;
   }
 }

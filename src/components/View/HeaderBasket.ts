@@ -1,5 +1,4 @@
 import { Component } from "../base/Component";
-import { IEvents } from "../base/Events";
 import { ensureElement } from "../../utils/utils";
 
 interface IHeader {
@@ -11,22 +10,16 @@ export class HeaderBasket extends Component<IHeader> {
   protected basketButton: HTMLButtonElement;
 
   constructor(
-    protected events: IEvents,
-    conteiner: HTMLElement,
+    container: HTMLElement,
+    private onClick: () => void,
   ) {
-    super(conteiner);
+    super(container);
 
-    this.counterElement = ensureElement<HTMLElement>(
-      ".header__basket-counter",
-      this.container,
-    );
-    this.basketButton = ensureElement<HTMLButtonElement>(
-      ".header__basket",
-      this.container,
-    );
+    this.counterElement = ensureElement<HTMLElement>(".header__basket-counter", this.container);
+    this.basketButton = ensureElement<HTMLButtonElement>(".header__basket", this.container);
 
     this.basketButton.addEventListener("click", () => {
-      this.events.emit("basket:open");
+      this.onClick();
     });
   }
 

@@ -15,14 +15,8 @@ export class CatalogCard extends BaseCard<IProduct> {
   ) {
     super(container, events);
 
-    this.categoryElement = ensureElement<HTMLElement>(
-      ".card__category",
-      this.container,
-    );
-    this.imageElement = ensureElement<HTMLImageElement>(
-      ".card__image",
-      this.container,
-    );
+    this.categoryElement = ensureElement<HTMLElement>(".card__category", this.container);
+    this.imageElement = ensureElement<HTMLImageElement>(".card__image", this.container);
 
     this.container.addEventListener("click", (e: Event) => {
       e.stopPropagation();
@@ -30,27 +24,20 @@ export class CatalogCard extends BaseCard<IProduct> {
     });
   }
 
-  render(data?: Partial<IProduct>): HTMLElement {
-    super.render(data);
+  set category(value: string) {
+    this.categoryElement.textContent = value;
+    this.categoryElement.classList.remove(...Object.values(categoryMap));
 
-    if (!data) {
-      return this.container;
+    const modifier = categoryMap[value as keyof typeof categoryMap];
+    if (modifier) {
+      this.categoryElement.classList.add(modifier);
     }
+  }
 
-    if (data.category !== undefined) {
-      this.categoryElement.textContent = data.category;
-      this.categoryElement.classList.remove(...Object.values(categoryMap));
-
-      const modifier = categoryMap[data.category as keyof typeof categoryMap];
-      if (modifier) {
-        this.categoryElement.classList.add(modifier);
-      }
+  set image(value: string) {
+    if (value) {
+      this.imageElement.src = CDN_URL + value;
+      this.imageElement.alt = this.titleElement?.textContent || '';
     }
-
-    if (data.image !== undefined) {
-      this.setImage(this.imageElement, CDN_URL + data.image, data.title);
-    }
-
-    return this.container;
   }
 }

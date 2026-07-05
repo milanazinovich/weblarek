@@ -12,28 +12,20 @@ export abstract class BaseCard<T extends IBaseCard> extends Component<T> {
     super(container);
     this.events = events;
 
-    this.titleElement = ensureElement<HTMLElement>(
-      ".card__title",
-      this.container,
-    );
-    this.priceElement = ensureElement<HTMLElement>(
-      ".card__price",
-      this.container,
-    );
+    this.titleElement = ensureElement<HTMLElement>(".card__title", this.container);
+    this.priceElement = ensureElement<HTMLElement>(".card__price", this.container);
   }
 
-  render(data?: Partial<T>): HTMLElement {
-    if (data) {
-      if (data.title !== undefined) {
-        this.titleElement.textContent = data.title;
-      }
-
-      if (data.price !== undefined) {
-        this.priceElement.textContent =
-          data.price === null ? "Бесценно" : `${data.price} синапсов`;
-      }
+  set title(value: string) {
+        if (this.titleElement) {
+            this.titleElement.textContent = value;
+        }
     }
 
-    return this.container;
+    set price(value: number | null) {
+        if (this.priceElement) {
+            this.priceElement.textContent = value === null ? 'Бесценно' : `${value} синапсов`;
+        }
+    } 
   }
-}
+

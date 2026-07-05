@@ -11,10 +11,7 @@ export abstract class Form<T> extends Component<T> {
     super(container);
     this.events = events;
 
-    this.submit = ensureElement<HTMLButtonElement>(
-      'button[type="submit"]',
-      this.container,
-    );
+    this.submit = ensureElement<HTMLButtonElement>('button[type="submit"]', this.container);
 
     this.errors = ensureElement<HTMLElement>(".form__errors", this.container);
 

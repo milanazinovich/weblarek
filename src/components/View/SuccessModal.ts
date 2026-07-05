@@ -12,23 +12,10 @@ export class SuccessModal extends Component<ISuccess> {
     super(container);
     this.events = events;
 
-    this.description = ensureElement<HTMLElement>(
-      ".order-success__description",
-      this.container,
-    );
-    this.closeButton = ensureElement<HTMLElement>(
-      ".order-success__close",
-      this.container,
-    );
+    this.description = ensureElement<HTMLElement>(".order-success__description", this.container);
+    this.closeButton = ensureElement<HTMLElement>(".order-success__close", this.container);
     this.closeButton.addEventListener("click", () => {
       this.events.emit("success:close");
     });
-  }
-
-  render(data?: Partial<ISuccess>): HTMLElement {
-    if (data && data.total !== undefined) {
-      this.description.textContent = `Списано ${data.total} синапсов`;
-    }
-    return this.container;
   }
 }

@@ -1,6 +1,5 @@
 import { CatalogCard } from "./CatalogCard";
 import { IEvents } from "../base/Events";
-import { IModalCard, IProduct } from "../../types";
 import { ensureElement } from "../../utils/utils";
 
 export class ModalCard extends CatalogCard {
@@ -14,14 +13,8 @@ export class ModalCard extends CatalogCard {
   ) {
     super(container, events, onClick);
 
-    this.buttonElement = ensureElement<HTMLButtonElement>(
-      ".button",
-      this.container,
-    );
-    this.descriptionElement = ensureElement<HTMLElement>(
-      ".card__text",
-      this.container,
-    );
+    this.buttonElement = ensureElement<HTMLButtonElement>(".button", this.container);
+    this.descriptionElement = ensureElement<HTMLElement>(".card__text", this.container);
 
     this.buttonElement.addEventListener("click", (e: Event) => {
       e.stopPropagation();
@@ -40,27 +33,5 @@ export class ModalCard extends CatalogCard {
 
   set buttonDisabled(value: boolean) {
     this.buttonElement.disabled = value;
-  }
-
-  render(data?: Partial<IProduct> & Partial<IModalCard>): HTMLElement {
-    super.render(data);
-
-    if (!data) {
-      return this.container;
-    }
-
-    if (data.description !== undefined) {
-      this.description = data.description;
-    }
-
-    if (data.buttonText !== undefined) {
-      this.buttonText = data.buttonText;
-    }
-
-    if (data.buttonDisabled !== undefined) {
-      this.buttonDisabled = data.buttonDisabled;
-    }
-
-    return this.container;
   }
 }
